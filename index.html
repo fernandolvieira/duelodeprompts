@@ -84,7 +84,6 @@
             border-radius: 4px;
             line-height: 1.4;
         }
-        /* Tarja vermelha destacada no meio da tela */
         .turn-alert {
             background-color: var(--danger);
             color: white;
@@ -114,10 +113,10 @@
         <h1>⚔️ Duelo de Prompts 🤖</h1>
         <p style="text-align: center;">Digite os nomes da dupla para começar ou recuperar de onde pararam!</p>
         
-        <label for="p1-name"><strong>Nome do Jogador 1:</strong></label>
+        <label for="p1-name"><strong>Nome do Jogador(a) 1:</strong></label>
         <input type="text" id="p1-name" placeholder="Ex: João">
         
-        <label for="p2-name"><strong>Nome do Jogador 2:</strong></label>
+        <label for="p2-name"><strong>Nome do Jogador(a) 2:</strong></label>
         <input type="text" id="p2-name" placeholder="Ex: Maria">
 
         <button onclick="startDuel()">Entrar na Arena 🚀</button>
@@ -140,8 +139,8 @@
             💡 <strong>Dicas do Guia:</strong> Dê um papel para a IA[cite: 2], use tags como &lt;instrucoes&gt;[cite: 2], dê exemplos[cite: 2], peça passo a passo[cite: 2] e proíba invenções[cite: 2]!
         </div>
 
-        <!-- Tarja vermelha destacada -->
-        <div class="turn-alert" id="turn-announcement">Hora do Jogador jogar! [Colega aguarde sua vez]</div>
+        <!-- Tarja vermelha destacada com do(a) -->
+        <div class="turn-alert" id="turn-announcement">Hora do(a) jogador(a) jogar! [Colega aguarde sua vez]</div>
         
         <div class="timer-box" id="timer-display">Tempo restante: 03:00</div>
 
@@ -191,7 +190,7 @@
     };
 
     let timerInterval = null;
-    let timeLeft = 180; // 3 minutos em segundos
+    let timeLeft = 180;
 
     function getBadge(score) {
         if (score < 5) return "🌱 Novato dos Prompts";
@@ -234,7 +233,7 @@
 
     function startTimer() {
         clearInterval(timerInterval);
-        timeLeft = 180; // Reseta para 3 minutos
+        timeLeft = 180;
         updateTimerDisplay();
 
         timerInterval = setInterval(() => {
@@ -271,9 +270,9 @@
         let currentName = session.activePlayer === 1 ? session.p1Name : session.p2Name;
         let waitingName = session.activePlayer === 1 ? session.p2Name : session.p1Name;
 
-        // Atualização da Tarja Vermelha solicitada
-        document.getElementById("turn-announcement").innerText = `Hora do ${currentName} jogar! [${waitingName} aguarde sua vez]`;
-        document.getElementById("prompt-label").innerHTML = `<strong>Prompt Secreto de ${currentName}:</strong>`;
+        // Tarja vermelha atualizada com do(a)
+        document.getElementById("turn-announcement").innerText = `Hora do(a) ${currentName} jogar! [${waitingName} aguarde sua vez]`;
+        document.getElementById("prompt-label").innerHTML = `<strong>Prompt Secreto do(a) ${currentName}:</strong>`;
         
         let minScore = Math.min(session.score1, session.score2);
         document.getElementById("badge-display").innerText = `🏆 Nível Atual da Dupla: ${getBadge(minScore)}`;
@@ -359,7 +358,7 @@
 
         if (session.currentIdx < challenges.length) {
             let nextStarter = session.activePlayer === 1 ? session.p1Name : session.p2Name;
-            alert(`Fim deste duelo! No próximo desafio, quem começa respondendo é: ${nextStarter}.`);
+            alert(`Fim deste duelo! No próximo desafio, quem começa respondendo é o(a): ${nextStarter}.`);
             loadTurn();
         } else {
             showEndScreen();
@@ -372,8 +371,8 @@
         document.getElementById("screen-end").classList.remove("hidden");
 
         let winnerText = "";
-        if (session.score1 > session.score2) winnerText = `🏆 Vencedor: ${session.p1Name}! Parabéns!`;
-        else if (session.score2 > session.score1) winnerText = `🏆 Vencedor: ${session.p2Name}! Parabéns!`;
+        if (session.score1 > session.score2) winnerText = `🏆 Vencedor(a): ${session.p1Name}! Parabéns!`;
+        else if (session.score2 > session.score1) winnerText = `🏆 Vencedor(a): ${session.p2Name}! Parabéns!`;
         else winnerText = `🤝 Empate técnico excelente!`;
 
         document.getElementById("final-winner").innerText = winnerText;
