@@ -81,6 +81,7 @@
             border-left: 4px solid #F59E0B;
             margin-bottom: 15px;
             border-radius: 4px;
+            line-height: 1.4;
         }
         .turn-alert {
             background: #D1FAE5;
@@ -90,6 +91,7 @@
             font-weight: bold;
             text-align: center;
             margin-bottom: 15px;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -128,7 +130,7 @@
             💡 <strong>Dicas do Guia:</strong> Dê um papel para a IA[cite: 2], use tags como &lt;instrucoes&gt;[cite: 2], dê exemplos[cite: 2], peça passo a passo[cite: 2] e proíba invenções[cite: 2]!
         </div>
 
-        <div class="turn-alert" id="turn-announcement">Vez do Jogador responder!</div>
+        <div class="turn-alert" id="turn-announcement">Passem o aparelho para: Jogador!</div>
         
         <div id="player-turn-box">
             <label id="prompt-label"><strong>Seu Prompt Secreto:</strong></label>
@@ -171,7 +173,7 @@
         currentIdx: 0,
         score1: 0,
         score2: 0,
-        activePlayer: 1, // 1 para Jogador 1, 2 para Jogador 2
+        activePlayer: 1,
         tempPrompt1: ""
     };
 
@@ -191,7 +193,6 @@
             return;
         }
 
-        // Tenta recuperar sessão salva no navegador se os nomes baterem
         const saved = localStorage.getItem("duelo_prompt_session");
         if (saved) {
             let parsed = JSON.parse(saved);
@@ -228,7 +229,7 @@
         document.getElementById("prompt-input").value = "";
 
         let currentName = session.activePlayer === 1 ? session.p1Name : session.p2Name;
-        document.getElementById("turn-announcement").innerText = `Passuem o aparelho para: ${currentName}!`;
+        document.getElementById("turn-announcement").innerText = `Passem o aparelho para: ${currentName}!`;
         document.getElementById("prompt-label").innerHTML = `<strong>Prompt Secreto de ${currentName}:</strong>`;
         
         let minScore = Math.min(session.score1, session.score2);
@@ -257,14 +258,12 @@
         }
 
         if (session.activePlayer === 1) {
-            // Jogador 1 jogou, guarda temporariamente e passa a vez para o Jogador 2 no mesmo desafio
             session.tempPrompt1 = text;
             session.activePlayer = 2;
             saveSession();
             alert(`Boa, ${session.p1Name}! Agora entregue o aparelho para ${session.p2Name}.`);
             loadTurn();
         } else {
-            // Jogador 2 jogou! Temos os dois prompts do desafio atual. Vamos avaliar e salvar na planilha.
             const btn = document.getElementById("btn-action");
             btn.innerText = "Avaliando e Salvando... ⏳";
             btn.disabled = true;
@@ -292,7 +291,6 @@
                 vencedor: roundWinner
             };
 
-            // Envia para o Google Sheets
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -302,7 +300,6 @@
                 finishRoundSequence(weight);
             })
             .catch(() => {
-                // Salva mesmo se houver instabilidade momentânea na rede
                 finishRoundSequence(weight);
             });
         }
@@ -313,9 +310,6 @@
         btn.innerText = "Enviar Resposta ⚡";
         btn.disabled = false;
 
-        // Alterna quem começa o próximo desafio
-        // Se no desafio atual o J1 começou, no próximo o J2 começa!
-        // Como controlamos isso? Olhando o índice do desafio: se for par, J1 começa; se for ímpar, J2 começa.
         session.currentIdx++;
         session.activePlayer = (session.currentIdx % 2 === 0) ? 1 : 2;
         session.tempPrompt1 = "";
