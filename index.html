@@ -8,6 +8,7 @@
         :root {
             --primary: #4F46E5;
             --secondary: #7C3AED;
+            --danger: #DC2626;
             --bg: #F3F4F6;
             --card: #FFFFFF;
             --text: #1F2937;
@@ -83,15 +84,24 @@
             border-radius: 4px;
             line-height: 1.4;
         }
+        /* Tarja vermelha destacada no meio da tela */
         .turn-alert {
-            background: #D1FAE5;
-            color: #065F46;
-            padding: 12px;
+            background-color: var(--danger);
+            color: white;
+            padding: 15px;
             border-radius: 8px;
             font-weight: bold;
             text-align: center;
             margin-bottom: 15px;
             font-size: 16px;
+            box-shadow: 0 2px 5px rgba(220, 38, 38, 0.4);
+        }
+        .timer-box {
+            text-align: right;
+            font-weight: bold;
+            color: var(--danger);
+            font-size: 14px;
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -130,8 +140,11 @@
             💡 <strong>Dicas do Guia:</strong> Dê um papel para a IA[cite: 2], use tags como &lt;instrucoes&gt;[cite: 2], dê exemplos[cite: 2], peça passo a passo[cite: 2] e proíba invenções[cite: 2]!
         </div>
 
-        <div class="turn-alert" id="turn-announcement">Passem o aparelho para: Jogador!</div>
+        <!-- Tarja vermelha destacada -->
+        <div class="turn-alert" id="turn-announcement">Hora do Jogador jogar! [Colega aguarde sua vez]</div>
         
+        <div class="timer-box" id="timer-display">Tempo restante: 03:00</div>
+
         <div id="player-turn-box">
             <label id="prompt-label"><strong>Seu Prompt Secreto:</strong></label>
             <textarea id="prompt-input" placeholder="Escreva seu comando aqui sem deixar o colega ver..."></textarea>
@@ -177,6 +190,9 @@
         tempPrompt1: ""
     };
 
+    let timerInterval = null;
+    let timeLeft = 180; // 3 minutos em segundos
+
     function getBadge(score) {
         if (score < 5) return "🌱 Novato dos Prompts";
         if (score < 12) return "🛠️ Aprendiz de Engenharia";
@@ -216,8 +232,32 @@
         localStorage.setItem("duelo_prompt_session", JSON.stringify(session));
     }
 
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 180; // Reseta para 3 minutos
+        updateTimerDisplay();
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert("O tempo de 3 minutos esgotou para este turno! O sistema enviará o texto atual.");
+                submitTurn();
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        let formatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById("timer-display").innerText = `Tempo restante: ${formatted}`;
+    }
+
     function loadTurn() {
         if (session.currentIdx >= challenges.length) {
+            clearInterval(timerInterval);
             showEndScreen();
             return;
         }
@@ -229,13 +269,18 @@
         document.getElementById("prompt-input").value = "";
 
         let currentName = session.activePlayer === 1 ? session.p1Name : session.p2Name;
-        document.getElementById("turn-announcement").innerText = `Passem o aparelho para: ${currentName}!`;
+        let waitingName = session.activePlayer === 1 ? session.p2Name : session.p1Name;
+
+        // Atualização da Tarja Vermelha solicitada
+        document.getElementById("turn-announcement").innerText = `Hora do ${currentName} jogar! [${waitingName} aguarde sua vez]`;
         document.getElementById("prompt-label").innerHTML = `<strong>Prompt Secreto de ${currentName}:</strong>`;
         
         let minScore = Math.min(session.score1, session.score2);
         document.getElementById("badge-display").innerText = `🏆 Nível Atual da Dupla: ${getBadge(minScore)}`;
         document.getElementById("score-p1").innerText = `${session.p1Name}: ${session.score1} pts`;
         document.getElementById("score-p2").innerText = `${session.p2Name}: ${session.score2} pts`;
+
+        startTimer();
     }
 
     function evaluatePrompt(text) {
@@ -251,11 +296,8 @@
     }
 
     function submitTurn() {
-        const text = document.getElementById("prompt-input").value.trim();
-        if (!text) {
-            alert("O prompt não pode estar vazio!");
-            return;
-        }
+        clearInterval(timerInterval);
+        const text = document.getElementById("prompt-input").value.trim() || "(Sem resposta / Tempo esgotado)";
 
         if (session.activePlayer === 1) {
             session.tempPrompt1 = text;
@@ -297,15 +339,15 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                finishRoundSequence(weight);
+                finishRoundSequence();
             })
             .catch(() => {
-                finishRoundSequence(weight);
+                finishRoundSequence();
             });
         }
     }
 
-    function finishRoundSequence(weight) {
+    function finishRoundSequence() {
         const btn = document.getElementById("btn-action");
         btn.innerText = "Enviar Resposta ⚡";
         btn.disabled = false;
@@ -325,6 +367,7 @@
     }
 
     function showEndScreen() {
+        clearInterval(timerInterval);
         document.getElementById("screen-arena").classList.add("hidden");
         document.getElementById("screen-end").classList.remove("hidden");
 
