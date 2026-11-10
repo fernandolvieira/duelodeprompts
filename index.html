@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duelo de Prompts - IA na Escola</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --secondary: #7C3AED;
+            --bg: #F3F4F6;
+            --card: #FFFFFF;
+            --text: #1F2937;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: var(--card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            max-width: 700px;
+            width: 100%;
+        }
+        h1, h2 { color: var(--primary); text-align: center; }
+        .hidden { display: none; }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px 0;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        textarea { height: 100px; resize: vertical; }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+        button:hover { background-color: #4338CA; }
+        .badge-box {
+            background: #EEF2FF;
+            border: 2px dashed var(--primary);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .duel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 600px) { .duel-grid { grid-template-columns: 1fr; } }
+        .player-box {
+            background: #F9FAFB;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #E5E7EB;
+        }
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            background: #E0E7FF;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .rule-tip {
+            font-size: 13px;
+            background: #FEF3C7;
+            padding: 10px;
+            border-left: 4px solid #F59E0B;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    
+    <!-- TELA 1: CADASTRO E ESCOLHA -->
+    <div id="screen-start">
+        <h1>⚔️ Duelo de Prompts 🤖</h1>
+        <p style="text-align: center;">Enfrente seu colega criando os melhores comandos para a Inteligência Artificial!</p>
+        
+        <label for="p1-name"><strong>Nome do Jogador 1:</strong></label>
+        <input type="text" id="p1-name" placeholder="Ex: João">
+        
+        <label for="p2-name"><strong>Nome do Jogador 2:</strong></label>
+        <input type="text" id="p2-name" placeholder="Ex: Maria">
+        
+        <label for="start-level"><strong>De qual desafio querem começar?</strong></label>
+        <select id="start-level">
+            <option value="0">Desafio 1 (Nível Fácil - Peso 1)</option>
+            <option value="1">Desafio 2 (Nível Fácil - Peso 1)</option>
+            <option value="2">Desafio 3 (Nível Fácil - Peso 1)</option>
+            <option value="3">Desafio 4 (Nível Médio - Peso 2)</option>
+            <option value="4">Desafio 5 (Nível Médio - Peso 2)</option>
+            <option value="5">Desafio 6 (Nível Médio - Peso 2)</option>
+            <option value="6">Desafio 7 (Nível Médio - Peso 2)</option>
+            <option value="7">Desafio 8 (Nível Difícil - Peso 3)</option>
+            <option value="8">Desafio 9 (Nível Difícil - Peso 3)</option>
+            <option value="9">Desafio 10 (Nível Difícil - Peso 3)</option>
+        </select>
+
+        <button onclick="startDuel()">Entrar na Arena 🚀</button>
+    </div>
+
+    <!-- TELA 2: A ARENA DE DUELO -->
+    <div id="screen-arena" class="hidden">
+        <div class="scoreboard">
+            <span id="score-p1">Jogador 1: 0 pts</span>
+            <span id="round-info">Desafio 1/10</span>
+            <span id="score-p2">Jogador 2: 0 pts</span>
+        </div>
+
+        <div class="badge-box" id="badge-display">🏆 Badge Atual: Novato dos Prompts</div>
+        
+        <h2 id="challenge-title">Título do Desafio</h2>
+        <p id="challenge-desc" style="background: #EEF2FF; padding: 12px; border-radius: 6px; line-height: 1.5;"></p>
+        
+        <div class="rule-tip">
+            💡 <strong>Lembre-se das dicas de Ouro:</strong> Dê um papel para a IA, use tags como &lt;instrucoes&gt;[cite: 2], dê exemplos[cite: 2], peça para pensar passo a passo[cite: 2] e proíba invenções[cite: 2]!
+        </div>
+
+        <div class="duel-grid">
+            <div class="player-box">
+                <label id="label-p1"><strong>Prompt do Jogador 1</strong></label>
+                <textarea id="prompt-p1" placeholder="Escreva o comando aqui..."></textarea>
+            </div>
+            <div class="player-box">
+                <label id="label-p2"><strong>Prompt do Jogador 2</strong></label>
+                <textarea id="prompt-p2" placeholder="Escreva o comando aqui..."></textarea>
+            </div>
+        </div>
+
+        <button id="btn-duel" onclick="evaluateAndNext()">Duelar e Salvar! ⚡</button>
+    </div>
+
+    <!-- TELA 3: RESULTADO FINAL -->
+    <div id="screen-end" class="hidden">
+        <h1>🎉 Fim do Duelo!</h1>
+        <h2 id="final-winner" style="color: #7C3AED; font-size: 24px; text-align: center;">O vencedor é...</h2>
+        <div id="final-scores" style="background: #F3F4F6; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; font-size: 18px;"></div>
+        <p style="text-align: center;">Os dados de pontuação e os prompts foram salvos na planilha do professor!</p>
+        <button onclick="location.reload()">Jogar Novamente 🔄</button>
+    </div>
+
+</div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWGm93HBegtzUIsnyEd9sR8_L8SIki_w5-EYJOhfB-qU4Q6bBb22jlaIt_mlC6UU2R/exec";
+
+    const challenges = [
+        { title: "1. O Resumo do Livro", desc: "Vocês precisam que a IA resuma um livro de 200 páginas, mas ela costuma inventar fatos que não existem. Crie um prompt aplicando as regras para evitar invenções e organizar a resposta.", level: "Fácil", weight: 1 },
+        { title: "2. Explicação de Matemática", desc: "A IA precisa explicar frações para uma criança de 10 anos usando um exemplo prático (como pizza) sem dar a resposta final direto.", level: "Fácil", weight: 1 },
+        { title: "3. Tradução Divertida", desc: "Peça para a IA traduzir uma frase em inglês, mas exigindo que ela use um tom de pirata nas falas.", level: "Fácil", weight: 1 },
+        { title: "4. O Detetive de Erros de Código", desc: "A IA deve agir como um programador sênior, analisar um código com erro dentro de tags <codigo> e explicar o passo a passo da correção.", level: "Médio", weight: 2 },
+        { title: "5. Classificador de Sentimentos", desc: "Crie um prompt com exemplos (Few-Shot) estruturados em tags para a IA classificar se um comentário de cliente é [Positivo] ou [Negativo].", level: "Médio", weight: 2 },
+        { title: "6. Planejador de Estudos", desc: "A IA deve atuar como um orientador educacional e montar um cronograma de estudos, exigindo que ela use o método de raciocínio passo a passo (<thinking>).", level: "Médio", weight: 2 },
+        { title: "7. O Conto de Ficção Científica", desc: "Escreva um comando complexo definindo um papel exato para a IA, usando tags <contexto> e delimitando um formato de saída estrito em tópicos.", level: "Médio", weight: 2 },
+        { title: "8. Juiz de Reembolso (Lógica Complexa)", desc: "A IA deve analisar um pedido de reembolso. Exija que ela verifique prazos e regras passo a passo antes de dar o veredito final, proibindo inventar dados.", level: "Difícil", weight: 3 },
+        { title: "9. Extração de Dados Avançada", desc: "A IA deve ler um texto bruto e extrair informações exatas, formatando a saída de modo estrito sem saudações conversacionais.", level: "Difícil", weight: 3 },
+        { title: "10. O Desafio Mestre dos Prompts", desc: "Crie um prompt completo utilizando a estrutura Mestre (Papel, Contexto, Instruções detalhadas com tags XML, Exemplos e Tratamento de Erros caso falte informação).", level: "Difícil", weight: 3 }
+    ];
+
+    let currentIdx = 0;
+    let p1Name = "";
+    let p2Name = "";
+    let score1 = 0;
+    let score2 = 0;
+
+    function getBadge(score) {
+        if (score < 5) return "🌱 Novato dos Prompts";
+        if (score < 12) return "🛠️ Aprendiz de Engenharia";
+        if (score < 20) return "🚀 Mestre das Tags XML";
+        return "👑 Arquiteto de IAs Supremo";
+    }
+
+    function startDuel() {
+        p1Name = document.getElementById("p1-name").value.trim();
+        p2Name = document.getElementById("p2-name").value.trim();
+        const startLevel = parseInt(document.getElementById("start-level").value);
+
+        if (!p1Name || !p2Name) {
+            alert("Por favor, preencha o nome dos dois jogadores!");
+            return;
+        }
+
+        currentIdx = startLevel;
+        document.getElementById("label-p1").innerText = `Prompt do(a) ${p1Name}`;
+        document.getElementById("label-p2").innerText = `Prompt do(a) ${p2Name}`;
+
+        document.getElementById("screen-start").classList.add("hidden");
+        document.getElementById("screen-arena").classList.remove("hidden");
+        loadChallenge();
+    }
+
+    function loadChallenge() {
+        const ch = challenges[currentIdx];
+        document.getElementById("round-info").innerText = `Desafio ${currentIdx + 1}/10 (${ch.level} - Peso ${ch.weight})`;
+        document.getElementById("challenge-title").innerText = ch.title;
+        document.getElementById("challenge-desc").innerText = ch.desc;
+        document.getElementById("prompt-p1").value = "";
+        document.getElementById("prompt-p2").value = "";
+        
+        let minScore = Math.min(score1, score2);
+        document.getElementById("badge-display").innerText = `🏆 Nível Atual da Dupla: ${getBadge(minScore)}`;
+        document.getElementById("score-p1").innerText = `${p1Name}: ${score1} pts`;
+        document.getElementById("score-p2").innerText = `${p2Name}: ${score2} pts`;
+    }
+
+    function evaluatePrompt(text) {
+        let points = 2; // Nota base por tentar
+        let t = text.toLowerCase();
+        
+        // Critérios baseados no guia de prompts da Anthropic / imagem
+        if (t.includes("<") && t.includes(">")) points += 3; // Usou tags XML
+        if (t.includes("como") || t.includes("aja como") || t.includes("papel") || t.includes("especialista")) points += 2; // Deu papel
+        if (t.includes("exemplo") || t.includes("ex:")) points += 2; // Usou exemplos
+        if (t.includes("passo") || t.includes("thinking") || t.includes("raciocine")) points += 1; // Raciocínio passo a passo
+        
+        if (points > 10) points = 10;
+        if (text.length < 15) points = 1; // Muito curto
+        return points;
+    }
+
+    function evaluateAndNext() {
+        const p1Text = document.getElementById("prompt-p1").value.trim();
+        const p2Text = document.getElementById("prompt-p2").value.trim();
+
+        if (!p1Text || !p2Text) {
+            alert("Ambos os jogadores precisam escrever um prompt antes de continuar!");
+            return;
+        }
+
+        const btn = document.getElementById("btn-duel");
+        btn.innerText = "Avaliando com as regras do Guia... ⏳";
+        btn.disabled = true;
+
+        const weight = challenges[currentIdx].weight;
+        
+        // Avalia os prompts automaticamente com base nos critérios do guia
+        let raw1 = evaluatePrompt(p1Text);
+        let raw2 = evaluatePrompt(p2Text);
+        
+        let n1 = raw1 * weight;
+        let n2 = raw2 * weight;
+
+        score1 += n1;
+        score2 += n2;
+
+        let roundWinner = "Empate";
+        if (n1 > n2) roundWinner = p1Name;
+        else if (n2 > n1) roundWinner = p2Name;
+
+        // Prepara os dados para salvar na Planilha Google
+        const payload = {
+            aluno1: p1Name,
+            aluno2: p2Name,
+            nivel: challenges[currentIdx].level,
+            desafioTitulo: challenges[currentIdx].title,
+            prompt1: p1Text,
+            nota1: n1,
+            prompt2: p2Text,
+            nota2: n2,
+            vencedor: roundWinner
+        };
+
+        // Envio seguro para o Google Sheets
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            currentIdx++;
+            if (currentIdx < challenges.length) {
+                loadChallenge();
+                btn.innerText = "Duelar e Salvar! ⚡";
+                btn.disabled = false;
+            } else {
+                showEndScreen();
+            }
+        })
+        .catch(error => {
+            console.error("Erro:", error);
+            // Avança mesmo se houver falha momentânea de rede para não travar a aula
+            currentIdx++;
+            if (currentIdx < challenges.length) {
+                loadChallenge();
+                btn.innerText = "Duelar e Salvar! ⚡";
+                btn.disabled = false;
+            } else {
+                showEndScreen();
+            }
+        });
+    }
+
+    function showEndScreen() {
+        document.getElementById("screen-arena").classList.add("hidden");
+        document.getElementById("screen-end").classList.remove("hidden");
+
+        let winnerText = "";
+        if (score1 > score2) winnerText = `🏆 Vencedor: ${p1Name}! Parabéns!`;
+        else if (score2 > score1) winnerText = `🏆 Vencedor: ${p2Name}! Parabéns!`;
+        else winnerText = `🤝 Empate técnico excelente!`;
+
+        document.getElementById("final-winner").innerText = winnerText;
+        document.getElementById("final-scores").innerHTML = `
+            <strong>Placar Final:</strong><br>
+            ${p1Name}: ${score1} pontos (${getBadge(score1)})<br>
+            ${p2Name}: ${score2} pontos (${getBadge(score2)})
+        `;
+    }
+</script>
+
+</body>
+</html>
